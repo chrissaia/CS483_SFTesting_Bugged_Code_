@@ -2,200 +2,211 @@ import java.util.Scanner;
 import java.util.ArrayList;
 
 public class GradeToolkit {
-
+	
     /*
     Purpose: Calculate GPA based on user-entered grades
     input: grades from user
     output: GPA
     */
     static double calculateGPA(Scanner input) {
-
-        int[] grades = new int[4];   
         int count = 0;
-        double sum = 0;              
+        double sum = 0;
 
         System.out.println("Enter grades (enter -1 to stop):");
-
         while (true) {
             System.out.print("Grade " + (count + 1) + ": ");
-            grades[count] = input.nextInt();
-
-            if (grades[count] == -1) {
-                break;
-            }
-
-            sum += grades[count];   
+            int g = input.nextInt();
+            if (g == -1) break;
+            sum += g;
             count++;
         }
 
-        double gpa = sum / count;
-        System.out.printf("You entered %d grades. GPA = %d\n", count, gpa); 
+        if (count == 0) {
+            System.out.println("No grades entered. GPA = 0.00");
+            return 0.0;
+        }
 
+        double gpa = sum / count;
+        System.out.printf("You entered %d grades. GPA = %.2f%n", count, gpa);
         return gpa;
     }
 
+
+
+    
     /*
     Purpose: Enter assignment scores and determine pass/fail
     input: assignment scores from users
     output: pass/fail status
     */
-    static void PassOrFail(Scanner input) {
+    static String PassOrFail(Scanner input) {
         int[] assignments = new int[5];
-        int i;
-        double total = 0;  
+        double total = 0;
 
         System.out.println("Enter five assignment scores:");
-        for (i = 0; i <= 5; i++) {  
+        for (int i = 0; i < 5; i++) {
             System.out.print("Assignment " + (i + 1) + ": ");
             assignments[i] = input.nextInt();
         }
 
         System.out.println("Your assignments:");
-        for (i = 0; i <= 5; i++) {  
+        for (int i = 0; i < 5; i++) {
             System.out.print(assignments[i] + " ");
-            total += assignments[i]; 
+            total += assignments[i];
         }
         System.out.println();
 
-        double average = total / 5;  
+        double average = total / 5.0;
         if (average < 60) {
             System.out.println("Fail");
+            return "Fail";
         } else {
             System.out.println("Pass");
+            return "Pass";
         }
     }
 
+
+   
+    
     /**
      * Purpose: Convert numeric grade to letter grade
      * Input: Numeric grade from user
      * Output: Letter grade
      */
-    static void grade_To_letter(Scanner input) {
+    static String grade_To_letter(Scanner input) {
         System.out.print("Enter numeric grade (out of 100): ");
         int grade = input.nextInt();
 
-        switch(grade / 10) {
-            case 10:
-            case 9:
-                System.out.println("A");
-                break;
-            case 8:
-                System.out.println("B");
-                break;
-            case 7:
-                System.out.println("C");
-                break;
-            case 6:
-                System.out.println("D");
-                break;
-            default:
-                System.out.println("F");
-                break;
-        }
+        if (grade >= 90) return "A";
+        if (grade >= 80) return "B";
+        if (grade >= 70) return "C";
+        if (grade >= 60) return "D";
+        return "F";
     }
-
+    
+    
+    
     /*
      * Purpose: Calculate total grade with assignment categories of different weight.
      * Input: Assignment scores & weights from user
      * Output: Total/final grade
      */ 
-    static void calculate_weighted_grade(Scanner input) {
+    static float calculate_weighted_grade(Scanner input) {
         System.out.println("Weights of categories should be between 0-1, enter -1 to restart.");
-        ArrayList<Float> weights = new ArrayList<Float>();
-        float weight = 0;
-        float totalWeight = 0;
+        ArrayList<Float> weights = new ArrayList<>();
+        float totalWeight = 0f;
         int i = 1;
-        while(weight != -1 && totalWeight != 1) {
+
+        // collect weights until total is exactly 1.0
+        while (true) {
             System.out.println("Enter weight of category " + i + ":");
-            weight = input.nextFloat();
-            if (weight != -1) {
-                if (weight + totalWeight <= 1) {
-                    totalWeight += weight;
-                    weights.add(weight);
-                    i++;
-                }
-                else {
-                    System.out.println("Total of weights is greater than 1, invalid.");
-                    weight = 0;
-                    totalWeight = 0;
-                    i = 1;
-                }
+            float w = input.nextFloat();                 // throws InputMismatchException on bad token (as expected by tests)
+            if (w == -1f) {                              // restart
+                weights.clear();
+                totalWeight = 0f;
+                i = 1;
+                continue;
             }
+            if (w < 0f || w > 1f || totalWeight + w > 1f) {
+                System.out.println("Total of weights is greater than 1, invalid.");
+                weights.clear();
+                totalWeight = 0f;
+                i = 1;
+                continue;
+            }
+            weights.add(w);
+            totalWeight += w;
+            if (Math.abs(totalWeight - 1f) < 1e-6) break; // stop when sum is 1
+            i++;
         }
-        float totalGrade = 0;
-        if (weights.size() > 0){
-            for (int x = 1; x < weights.size(); x++) {
-                System.out.println("Enter grade for category " + x + " or -1 to restart:");
+
+        float totalGrade = 0f;
+        if (!weights.isEmpty()) {
+            for (int x = 0; x < weights.size(); x++) {
+                System.out.println("Enter grade for category " + (x + 1) + " or -1 to restart:");
                 float grade = input.nextFloat();
-		if (grade != -1) {
-                	int weightedGrade = grade * weights.get(x);
-                	totalGrade += weightedGrade;
-		}
-		else {
-			totalGrade = 0;
-			x = 0;
-		}	
+                if (grade == -1f) {
+                    totalGrade = 0f;
+                    x = -1; // restart grades from first category
+                    continue;
+                }
+                totalGrade += grade * weights.get(x);
             }
             System.out.println("Your total grade is: " + totalGrade);
-        }
-        else{
+        } else {
             System.out.println("No values entered.");
         }
-        
+        return totalGrade;
     } 
 
+
+
+    
+    
     /*
      * Purpose: Calculate cumulative grade point average with a weight on credits
      * Input: Semester number, grade, credits
      * Output: Cumulative GPA.
      */
-    static void calculate_qpa(Scanner input){
-	    int totalGrades = 0;
-	    int totalCredits = 0;
-	    System.out.println("Enter number of classes taken:");
-	    int classes = input.nextInt();
-	    for (int i = 1; i <= classes; i++) {
-		    System.out.println("Enter grade for class " + i + ": (A-F)");
-		    String grade = input.nextLine();
-		    while (!grade.equals("A") && !grade.equals("B") && !grade.equals("C") && !grade.equals("D") && !grade.equals("F")) {
-			    System.out.println("Grade entered is invalid. Reenter: (A-F)");
-			    grade = input.nextLine();
-		    }
-		    switch (grade) {
-			    case "A":
-				    totalGrades += 4;
-				    break;
-		    	    case "B":
-				    totalGrades += 3;
-				    break;
-			    case "C":
-				    totalGrades += 2;
-				    break;
-			    case "D":
-				    totalGrades += 1;
-				    break;
-		    }
-		    System.out.println("Enter credits for class " + i + ":");
-		    int credits = input.nextInt();
-		    while (credits <= 0) {
-			    System.out.println("Credits entered invalid. Reenter:");
-			    credits = input.nextInt();
-		    }
-		    totalCredits += credits;
-	    } 
-	    float qpa = totalGrades / totalCredits;
-	    System.out.println("Your QPA is: " + qpa);
-	    System.out.println("Your total credits are: " + totalCredits);
+    static float calculate_qpa(Scanner input) {
+        int totalCredits = 0;
+        int totalQualityPoints = 0;
+
+        System.out.println("Enter number of classes taken:");
+        int classes = input.nextInt();
+
+        for (int i = 1; i <= classes; i++) {
+            System.out.println("Enter grade for class " + i + ": (A-F)");
+            String grade = input.next(); // use next() to avoid newline issues
+
+            while (!grade.equalsIgnoreCase("A") &&
+                   !grade.equalsIgnoreCase("B") &&
+                   !grade.equalsIgnoreCase("C") &&
+                   !grade.equalsIgnoreCase("D") &&
+                   !grade.equalsIgnoreCase("F")) {
+                System.out.println("Grade entered is invalid. Reenter: (A-F)");
+                grade = input.next();
+            }
+
+            int points;
+            switch (grade.toUpperCase()) {
+                case "A": points = 4; break;
+                case "B": points = 3; break;
+                case "C": points = 2; break;
+                case "D": points = 1; break;
+                default:  points = 0; break; // F
+            }
+
+            System.out.println("Enter credits for class " + i + ":");
+            int credits = input.nextInt();
+            while (credits <= 0) {
+                System.out.println("Credits entered invalid. Reenter:");
+                credits = input.nextInt();
+            }
+
+            totalCredits += credits;
+            totalQualityPoints += points * credits;
+        }
+
+        float qpa = totalCredits == 0 ? 0f : (float) totalQualityPoints / (float) totalCredits;
+        System.out.println("Your QPA is: " + qpa);
+        System.out.println("Your total credits are: " + totalCredits);
+        return qpa;
     }
 
-    /*
+
+
+    
+    
+	/*
      * Purpose: Calculate the grade needed on the final exam to achieve a desired overall course grade.
      * Input: Current grade, weight of final exam, desired overall grade
      * Output: Required final exam grade
      */
-    public static void calculate_finals_grade_needed(Scanner input) {
+    public static double calculate_finals_grade_needed(Scanner input) {
         System.out.print("Enter your current grade as a number: ");
-        double currentGrade = input.nextInt(); 
+        double currentGrade = input.nextDouble();
 
         System.out.print("Enter the weight % of your final exam as a number: ");
         double finalWeight = input.nextDouble();
@@ -210,17 +221,21 @@ public class GradeToolkit {
 
         if (requiredFinal > 100) {
             System.out.println("You’ll need over 100% on the final to reach your goal.");
-        } else if (requiredFinal < 0) 
-        {
+            return 100;
+        } else if (requiredFinal < 0) {
             System.out.println("You have already reached your desired grade! Even a 0 on the final would be fine.");
-        }
-        else {
-            System.out.printf("You need to score at least %f%% on the final exam to get a %f%% overall grade.\n", requiredFinal, desiredGrade);
+            return 0;
+        } else {
+            System.out.printf("You need to score at least %.2f%% on the final exam to get a %.2f%% overall grade.%n", requiredFinal, desiredGrade);
+            return requiredFinal;
         }
     }
     
     
-
+    
+    
+    
+    
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -243,10 +258,10 @@ public class GradeToolkit {
                 break;
             case 4:
                 calculate_weighted_grade(scanner);
-		        break;
-	        case 5:
-		        calculate_qpa(scanner);
-		        break;
+                break;
+            case 5:
+                calculate_qpa(scanner);
+                break;
             case 6:
                 calculate_finals_grade_needed(scanner);
                 break;
